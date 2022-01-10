@@ -27,3 +27,6 @@ maps-*.tar
 
 # Input arguments
 /inputs/
+
+# Ignore compiled script
+maps
