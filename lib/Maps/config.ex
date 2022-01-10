@@ -20,7 +20,7 @@ defmodule Maps.Config do
     |> parse_argv(argv)
   end
 
-  defp update_config(config, coord1, coord2, output_resolution) do
+  defp update_config(config, coord1, coord2, output_resolution, token) do
     [bottom, left] = parse_coords(coord1)
     [top, right] = parse_coords(coord2)
 
@@ -29,7 +29,8 @@ defmodule Maps.Config do
       left: left || config.left,
       top: top || config.top,
       right: right || config.right,
-      output_resolution: output_resolution || config.output_resolution
+      output_resolution: output_resolution || config.output_resolution,
+      mapbox_access_token: token || config.mapbox_access_token,
     }
     config
   end
@@ -39,7 +40,8 @@ defmodule Maps.Config do
       config,
       Application.get_env(:maps, :coord1),
       Application.get_env(:maps, :coord2),
-      Application.get_env(:maps, :output_resolution)
+      Application.get_env(:maps, :output_resolution),
+      nil
     )
   end
 
@@ -87,7 +89,8 @@ defmodule Maps.Config do
       config,
       Keyword.get(args, :coord1),
       Keyword.get(args, :coord2),
-      Keyword.get(args, :resolution)
+      Keyword.get(args, :resolution),
+      Keyword.get(args, :token)
     )
   end
 
