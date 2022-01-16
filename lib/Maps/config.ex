@@ -1,10 +1,9 @@
 defmodule Maps.Config do
+  alias Maps.Coordinate, as: Coord
   defstruct [
     # Frame lat/long coordinates
-    bottom: 0.0,
-    left: 0.0,
-    top: 0.0,
-    right: 0.0,
+    coord1: %Maps.Coordinate{},
+    coord2: %Maps.Coordinate{},
 
     output: nil,
     output_resolution: 1280,
@@ -24,11 +23,25 @@ defmodule Maps.Config do
     [bottom, left] = parse_coords(coord1)
     [top, right] = parse_coords(coord2)
 
+    sortfn = fn x ->
+      case Float.parse(x || "0.0") do
+        {value, _} -> value
+        :error -> 0.0
+      end
+    end
+
+    [bottom, top] = Enum.sort_by([bottom, top], sortfn)
+    [left, right] = Enum.sort_by([left, right], sortfn)
+
     config = %{config |
-      bottom: bottom || config.bottom,
-      left: left || config.left,
-      top: top || config.top,
-      right: right || config.right,
+      coord1: %Coord{
+        latitude: bottom || config.coord1.latitude,
+        longitude: left || config.coord1.longitude,
+      },
+      coord2: %Coord{
+        latitude: top || config.coord2.latitude,
+        longitude: right || config.coord2.longitude,
+      },
       output_resolution: output_resolution || config.output_resolution,
       mapbox_access_token: token || config.mapbox_access_token,
     }
@@ -98,18 +111,6 @@ defmodule Maps.Config do
   defp parse_output(config, args) do
     [output | _ ] = args
     %{config | output: output}
-  end
-
-  def parse_frame(config) do
-    [bottom, left] = parse_coords(Application.get_env(:maps, :coord1))
-    [top, right] = parse_coords(Application.get_env(:maps, :coord2))
-
-    %{config |
-      bottom: bottom,
-      left: left,
-      top: top,
-      right: right
-    }
   end
 
   defp parse_coords(coords) when coords == nil, do: [nil, nil]
