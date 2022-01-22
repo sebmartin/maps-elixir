@@ -7,12 +7,12 @@ defmodule Maps.ConfigTest do
     %{
       config_env: %Maps.Config{
         coord1: %Coord{
-          latitude: "44.95222",
-          longitude: "-76.37706",
+          latitude: 44.95222,
+          longitude: -76.37706,
         },
         coord2: %Coord{
-          latitude: "45.60419",
-          longitude: "-75.13199",
+          latitude: 45.60419,
+          longitude: -75.13199,
         },
         columns: 1,
         rows: 1,
@@ -36,12 +36,12 @@ defmodule Maps.ConfigTest do
     # TODO write arguments to temp yaml
     expected = %{context[:config_env] |
       coord1: %Coord{
-        latitude: "12.3456",
-        longitude: "-76.5432",
+        latitude: 12.3456,
+        longitude: -76.5432,
       },
       coord1: %Coord{
-        latitude: "13.3456",
-        longitude: "-75.5432",
+        latitude: 13.3456,
+        longitude: -75.5432,
       },
       output: "/output/path",
       output_resolution: 10000,
@@ -60,12 +60,12 @@ defmodule Maps.ConfigTest do
     ]
     expected = %{context[:config_env] |
       coord1: %Coord{
-        latitude: "12.3456",
-        longitude: "-76.5432",
+        latitude: 12.3456,
+        longitude: -76.5432,
       },
       coord2: %Coord{
-        latitude: "13.3456",
-        longitude: "-75.5432",
+        latitude: 13.3456,
+        longitude: -75.5432,
       },
       output: "/output/path",
       output_resolution: 10000,
@@ -84,12 +84,12 @@ defmodule Maps.ConfigTest do
     ]
     expected = %{context[:config_env] |
       coord1: %Coord{
-        latitude: "12.3456",
-        longitude: "-76.5432",
+        latitude: 12.3456,
+        longitude: -76.5432,
       },
       coord2: %Coord{
-        latitude: "13.3456",
-        longitude: "-75.5432",
+        latitude: 13.3456,
+        longitude: -75.5432,
       },
       output: "/output/path",
       output_resolution: 10000,
@@ -107,12 +107,12 @@ defmodule Maps.ConfigTest do
     ]
     expected = %{context[:config_env] |
       coord1: %Coord{
-        latitude: "10.0",
-        longitude: "-20.0",
+        latitude: 10.0,
+        longitude: -20.0,
       },
       coord2: %Coord{
-        latitude: "20.0",
-        longitude: "-10.0",
+        latitude: 20.0,
+        longitude: -10.0,
       }
     }
     assert Maps.Config.parse(argsv) == expected
@@ -123,12 +123,12 @@ defmodule Maps.ConfigTest do
     top_right = "20.0, -10.0"
     expected = %{context[:config_env] |
       coord1: %Coord{
-        latitude: "10.0",
-        longitude: "-20.0",
+        latitude: 10.0,
+        longitude: -20.0,
       },
       coord2: %Coord{
-        latitude: "20.0",
-        longitude: "-10.0",
+        latitude: 20.0,
+        longitude: -10.0,
       }
     }
     assert Maps.Config.parse(["-c", top_right, "-d", bottom_left]) == expected

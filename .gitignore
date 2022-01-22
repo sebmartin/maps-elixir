@@ -29,4 +29,4 @@ maps-*.tar
 /inputs/
 
 # Ignore compiled script
-maps
+/maps

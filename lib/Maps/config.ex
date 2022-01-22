@@ -20,18 +20,11 @@ defmodule Maps.Config do
   end
 
   defp update_config(config, coord1, coord2, output_resolution, token) do
-    [bottom, left] = parse_coords(coord1)
-    [top, right] = parse_coords(coord2)
+    [bottom, left] = Maps.Coordinate.parse_string(coord1)
+    [top, right] = Maps.Coordinate.parse_string(coord2)
 
-    sortfn = fn x ->
-      case Float.parse(x || "0.0") do
-        {value, _} -> value
-        :error -> 0.0
-      end
-    end
-
-    [bottom, top] = Enum.sort_by([bottom, top], sortfn)
-    [left, right] = Enum.sort_by([left, right], sortfn)
+    [bottom, top] = Enum.sort([bottom, top])
+    [left, right] = Enum.sort([left, right])
 
     config = %{config |
       coord1: %Coord{
@@ -112,11 +105,4 @@ defmodule Maps.Config do
     [output | _ ] = args
     %{config | output: output}
   end
-
-  defp parse_coords(coords) when coords == nil, do: [nil, nil]
-  defp parse_coords(coords) do
-    for val <- String.split(coords, ",") do String.trim(val) end
-  end
-
-
 end

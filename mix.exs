@@ -15,7 +15,8 @@ defmodule Maps.MixProject do
   defp deps do
     [
       {:mox, "~> 1.0"},
-      {:yaml_elixir, "~> 2.8"}
+      {:yaml_elixir, "~> 2.8"},
+      {:math, "~> 0.7"}
     ]
   end
 end
