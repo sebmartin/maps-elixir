@@ -6,19 +6,40 @@ defmodule Maps.CLI do
     ]
     Supervisor.start_link(children, strategy: :one_for_one)
 
+
     config = Maps.Config.parse(argv)
+    if !config.output or config.output == "" do
+      IO.puts("You must specify an output path with --output")
+      exit(1)
+    end
 
-    IO.inspect(config)
+    if !config.mapbox_access_token or config.mapbox_access_token == "" do
+      IO.puts("You must specify your MapBox access token with --token")
+      exit(2)
+    end
 
-    download(config)
+    {:ok, tmp_path} = Temp.mkdir "elixir-maps"
+    IO.puts("Using temporary path: #{tmp_path}")
+
+    tasks = download(tmp_path, config)
+    Task.await_many(tasks)
     stitch(config)
   end
 
-  defp download(_config) do
-    tasks = for x <- 1..4, y <- 1..4 do
-      Maps.DownloadTask.start(%{lat: 1, long: 2}, x, y)
+  defp download(tmp_path, config) do
+    task_launcher = fn x, y, x_res, y_res, coord1, coord2, context ->
+      Maps.DownloadTask.start(tmp_path, x, y, x_res, y_res, coord1, coord2, config.mapbox_access_token, context)
     end
-    Task.await_many(tasks)
+    context = Maps.Tile.foreach(
+      config.output_resolution,
+      config.coord1,
+      config.coord2,
+      task_launcher,
+      %{
+        tasks: []
+      }
+    )
+    context.tasks
   end
 
   defp stitch(_config) do

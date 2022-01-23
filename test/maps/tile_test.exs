@@ -1,6 +1,6 @@
 defmodule Maps.TileTest do
-  alias Maps.Coordinate, as: Coord
   use ExUnit.Case
+  alias Maps.Coordinate, as: Coord
 
   setup do
     %{
@@ -45,7 +45,6 @@ defmodule Maps.TileTest do
     result = foreach_tile(context)
 
     heights = for x <- 0..3, do: for y <- 0..2, do: result[[x,y]][:y_res]
-    IO.inspect(heights)
     heights_summed = for w <- heights, do: Enum.sum(w)
     expected_height = 3688
     assert Enum.all?(heights_summed, fn x -> x == expected_height end)

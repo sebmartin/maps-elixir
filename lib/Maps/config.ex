@@ -20,11 +20,11 @@ defmodule Maps.Config do
   end
 
   defp update_config(config, coord1, coord2, output_resolution, token) do
-    [bottom, left] = Maps.Coordinate.parse_string(coord1)
-    [top, right] = Maps.Coordinate.parse_string(coord2)
+    coord1 = Maps.Coordinate.parse_string(coord1)
+    coord2 = Maps.Coordinate.parse_string(coord2)
 
-    [bottom, top] = Enum.sort([bottom, top])
-    [left, right] = Enum.sort([left, right])
+    [bottom, top] = Enum.sort([coord1.latitude, coord2.latitude])
+    [left, right] = Enum.sort([coord1.longitude, coord2.longitude])
 
     config = %{config |
       coord1: %Coord{
@@ -70,8 +70,6 @@ defmodule Maps.Config do
       ]
     )
     {parsed, args, _invalid} = all_args
-
-    IO.inspect(all_args)
 
     config = config
     |> parse_config_file(parsed)
