@@ -6,7 +6,6 @@ defmodule Maps.CLI do
     ]
     Supervisor.start_link(children, strategy: :one_for_one)
 
-
     config = Maps.Config.parse(argv)
     if !config.output or config.output == "" do
       IO.puts("You must specify an output path with --output")
@@ -21,28 +20,16 @@ defmodule Maps.CLI do
     {:ok, tmp_path} = Temp.mkdir "elixir-maps"
     IO.puts("Using temporary path: #{tmp_path}")
 
-    tasks = download(tmp_path, config)
-    Task.await_many(tasks)
-    stitch(config)
-  end
-
-  defp download(tmp_path, config) do
-    task_launcher = fn x, y, x_res, y_res, coord1, coord2, context ->
-      Maps.DownloadTask.start(tmp_path, x, y, x_res, y_res, coord1, coord2, config.mapbox_access_token, context)
-    end
-    context = Maps.Tile.foreach(
-      config.output_resolution,
-      config.coord1,
-      config.coord2,
-      task_launcher,
-      %{
-        tasks: []
-      }
+    IO.puts("Downloading tiles...")
+    Task.await_many(
+      Maps.DownloadTask.download(Maps.Downloader, tmp_path, config)
     )
-    context.tasks
-  end
 
-  defp stitch(_config) do
-    IO.puts("TODO: stitch")
+    IO.puts("Stitching tiles...")
+    Task.await(
+      Maps.StitchTask.stitch(Maps.Stitcher, tmp_path, config)
+    )
+
+    IO.puts("Final map complete: #{Maps.IO.local_final_path(tmp_path)}")
   end
 end

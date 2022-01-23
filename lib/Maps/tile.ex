@@ -19,18 +19,17 @@ defmodule Maps.Tile do
 
   def foreach(width_pixels, coord1, coord2, process_fn, context, x \\ 0, y \\ 0) do
     # simplified distance algo
-    # x_km = longitude_to_km(coord2.longitude - coord1.longitude, coord1.latitude)
-    # y_km = latitude_to_km(coord2.latitude - coord1.latitude)
+    x_km = longitude_to_km(coord2.longitude - coord1.longitude, coord1.latitude)
+    y_km = latitude_to_km(coord2.latitude - coord1.latitude)
 
     # improve with vincenty algo
-    north_west_coord = %Coord{
-      latitude: coord1.latitude,
-      longitude: coord2.longitude
-    }
-    x_km = vincenty_distance(north_west_coord, coord2)
-    y_km = vincenty_distance(coord1, north_west_coord)
-
-    IO.inspect({x, y, x_km, y_km})
+    # north_west_coord = %Coord{
+    #   latitude: coord1.latitude,
+    #   longitude: coord2.longitude
+    # }
+    # x_km = vincenty_distance(north_west_coord, coord2)
+    # y_km = vincenty_distance(coord1, north_west_coord)
+    # IO.inspect({x, y, x_km, y_km})
 
     x_res = width_pixels
     y_res = trunc(x_res * y_km / x_km)
@@ -95,8 +94,6 @@ defmodule Maps.Tile do
         )
 
       true ->
-        # IO.puts("Processing cell [#{x_res}, #{y_res}] at #{coord1.latitude}, #{coord1.longitude}, #{coord2.latitude}, #{coord2.longitude}")
-        IO.puts("Processing cell (x: #{x}, y: #{y}), [#{x_res}, #{y_res}]")
         process_fn.(x, y, x_res, y_res, coord1, coord2, context)
     end
   end
