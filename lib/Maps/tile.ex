@@ -1,100 +1,86 @@
 defmodule Maps.Tile do
   alias Maps.Coordinate, as: Coord
 
-  defp longitude_to_km(longitude, latitude) do
+  def longitude_to_km(longitude, latitude) do
     lat_r = latitude * Math.pi / 180.0
     111.320 * longitude * Math.cos(lat_r)
   end
 
-  defp latitude_to_km(latitude) do
+  def latitude_to_km(latitude) do
     110.574 * latitude
   end
 
-  def vincenty_distance(coord1, coord2) do
-    :vincenty.distance(
-      {coord1.latitude, coord1.longitude},
-      {coord2.latitude, coord2.longitude}
-    )
+  def km_to_longitude(km, latitude) do
+    lat_r = latitude * Math.pi / 180.0
+    km / (111.320 * Math.cos(lat_r))
   end
 
-  def foreach(width_pixels, coord1, coord2, process_fn, context, x \\ 0, y \\ 0) do
-    # simplified distance algo
-    x_km = longitude_to_km(coord2.longitude - coord1.longitude, coord1.latitude)
-    y_km = latitude_to_km(coord2.latitude - coord1.latitude)
+  def km_to_latitude(km) do
+    km / 110.574
+  end
 
-    # improve with vincenty algo
-    # north_west_coord = %Coord{
-    #   latitude: coord1.latitude,
-    #   longitude: coord2.longitude
-    # }
-    # x_km = vincenty_distance(north_west_coord, coord2)
-    # y_km = vincenty_distance(coord1, north_west_coord)
-    # IO.inspect({x, y, x_km, y_km})
+  def zoomlevel(meters_per_pixel, latitude) do
+    circ_earth = 40_075_016.686  # equatorial circumference of the Earth in meters
+    lat_r = latitude * Math.pi / 180.0
+    zoom = Math.log(circ_earth * Math.cos(lat_r) / meters_per_pixel) / Math.log(2) - 9 # 9 for 2^9 == 512 (tile size)
+    IO.puts("Actual zoom: #{zoom}")
+    trunc(zoom)
+  end
 
-    x_res = width_pixels
-    y_res = trunc(x_res * y_km / x_km)
+  def latitude_to_tile_y(latitude, zoom, truncate \\ True) do
+    n = Math.pow(2, zoom)
+    lat_r = latitude * Math.pi / 180.0
+    y = n * (1 - (Math.log(Math.tan(lat_r) + 1.0/Math.cos(lat_r)) / Math.pi)) / 2
+    if truncate == True, do: trunc(y), else: y
+  end
 
-    cond do
-      y_res > 1280 ->
-        lat_tile_size = (1280.0 / y_res) * abs(coord2.latitude - coord1.latitude)
+  def longitude_to_tile_x(longitude, zoom, truncate \\ True) do
+    n = Math.pow(2, zoom)
+    x = n * ((longitude + 180) / 360.0)
+    if truncate == True, do: trunc(x), else: x
+  end
 
-        # bottom row
-        context = foreach(
-          width_pixels,
-          coord1,
-          %Coord{
-            latitude: Float.round(coord1.latitude + lat_tile_size, 7),
-            longitude: coord2.longitude
-          },
-          process_fn,
-          context,
-          x, y
-        )
+  def tiles_for_coordinate(coord, zoomlevel, truncate \\ True) do
+    {
+      longitude_to_tile_x(coord.longitude, zoomlevel, truncate),
+      latitude_to_tile_y(coord.latitude, zoomlevel, truncate)
+    }
+  end
 
-        # remaining rows
-        foreach(
-          width_pixels,
-          %Coord{
-            latitude: Float.round(coord1.latitude + lat_tile_size, 7),
-            longitude: coord1.longitude
-          },
-          coord2,
-          process_fn,
-          context,
-          x, y + 1
-        )
+  def tile_info(coord, radius, resolution, truncate \\ True) do
+    radius_x_deg = Maps.Tile.km_to_longitude(radius / 1000.0, coord.latitude)
+    radius_y_deg = Maps.Tile.km_to_latitude(radius / 1000.0)
 
-      x_res > 1280 ->
-        long_tile_size = (1280.0 / x_res) * abs(coord2.longitude - coord1.longitude)
+    coord1 = %Coord{
+      latitude: coord.latitude - radius_y_deg,
+      longitude: coord.longitude - radius_x_deg
+    }
+    coord2 = %Coord{
+      latitude: coord.latitude + radius_y_deg,
+      longitude: coord.longitude + radius_x_deg
+    }
 
-        # left column
-        context = foreach(
-          1280,
-          coord1,
-          %Coord{
-            latitude: coord2.latitude,
-            longitude: Float.round(coord1.longitude + long_tile_size, 7)
-          },
-          process_fn,
-          context,
-          x, y
-        )
+    diameter = radius * 2.0
+    meters_per_pixel = diameter / resolution
+    zoom = Maps.Tile.zoomlevel(meters_per_pixel, coord.latitude)
 
-        # remaining columns
-        foreach(
-          x_res - 1280,
-          %Coord{
-            latitude: coord1.latitude,
-            longitude: Float.round(coord1.longitude + long_tile_size, 7)
-          },
-          coord2,
-          process_fn,
-          context,
-          x + 1, y
-        )
+    {x1, y1} = Maps.Tile.tiles_for_coordinate(coord1, zoom, truncate)
+    {x2, y2} = Maps.Tile.tiles_for_coordinate(coord2, zoom, truncate)
 
-      true ->
-        process_fn.(x, y, x_res, y_res, coord1, coord2, context)
+    {{x1, y1}, {x2, y2}, zoom}
+  end
+
+  @spec foreach_tile(
+          atom | %{:latitude => number, :longitude => number, optional(any) => any},
+          number,
+          number,
+          any
+        ) :: list
+  def foreach_tile(coord, radius, resolution, process_fn) do
+    {{x1, y1}, {x2, y2}, zoom} = tile_info(coord, radius, resolution, False)
+
+    for x <- trunc(x1)..trunc(x2), y <- trunc(y1)..trunc(y2) do
+      process_fn.(x, y, zoom, {x1, y1, x2, y2})
     end
   end
 end

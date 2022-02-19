@@ -16,8 +16,8 @@ defmodule Maps.MixProject do
     [
       {:math, "~> 0.7"},
       {:mox, "~> 1.0"},
+      {:sleeplocks, "~> 1.1"},
       {:temp, "~> 0.4"},
-      {:vincenty, "~> 1.0"},
       {:yaml_elixir, "~> 2.8"}
     ]
   end

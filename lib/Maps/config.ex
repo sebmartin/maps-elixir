@@ -2,15 +2,16 @@ defmodule Maps.Config do
   alias Maps.Coordinate, as: Coord
   defstruct [
     # Frame lat/long coordinates
-    coord1: %Maps.Coordinate{},
-    coord2: %Maps.Coordinate{},
+    coord: %Coord{},
+    radius: 1.0,
 
     output: nil,
     output_resolution: 1280,
     columns: 1,
     rows: 1,
 
-    mapbox_access_token: ""
+    mapbox_access_token: "",
+    mapbox_style: "mapbox/outdoors-v11"
   ]
 
   def parse(argv) do
@@ -19,35 +20,24 @@ defmodule Maps.Config do
     |> parse_argv(argv)
   end
 
-  defp update_config(config, coord1, coord2, output_resolution, token) do
-    coord1 = Maps.Coordinate.parse_string(coord1)
-    coord2 = Maps.Coordinate.parse_string(coord2)
-
-    [bottom, top] = Enum.sort([coord1.latitude, coord2.latitude])
-    [left, right] = Enum.sort([coord1.longitude, coord2.longitude])
-
-    config = %{config |
-      coord1: %Coord{
-        latitude: bottom || config.coord1.latitude,
-        longitude: left || config.coord1.longitude,
-      },
-      coord2: %Coord{
-        latitude: top || config.coord2.latitude,
-        longitude: right || config.coord2.longitude,
-      },
+  defp update_config(config, coord, radius, output_resolution, style, token) do
+    %{config |
+      coord: Coord.parse_string(coord),
+      radius: radius,
       output_resolution: output_resolution || config.output_resolution,
-      mapbox_access_token: token || config.mapbox_access_token,
+      mapbox_style: style || config.mapbox_style,
+      mapbox_access_token: token || config.mapbox_access_token
     }
-    config
   end
 
   defp parse_env(config) do
     update_config(
       config,
-      Application.get_env(:maps, :coord1),
+      Application.get_env(:maps, :coord),
       Application.get_env(:maps, :coord2),
       Application.get_env(:maps, :output_resolution),
-      nil
+      Application.get_env(:maps, :style),
+      nil  # discourage storing the token in the env
     )
   end
 
@@ -55,18 +45,20 @@ defmodule Maps.Config do
     all_args = OptionParser.parse(
       argv,
       strict: [
-        coord1: :string,
-        coord2: :string,
+        coord: :string,
+        radius: :float,
         resolution: :integer,
         config: :string,
-        token: :string
+        token: :string,
+        style: :string
       ],
       aliases: [
-        c: :coord1,
-        d: :coord2,
-        r: :resolution,
+        c: :coord,
+        r: :radius,
+        w: :resolution,
         f: :config,
-        t: :token
+        t: :token,
+        s: :style
       ]
     )
     {parsed, args, _invalid} = all_args
@@ -91,9 +83,10 @@ defmodule Maps.Config do
     # TODO add validation
     update_config(
       config,
-      Keyword.get(args, :coord1),
-      Keyword.get(args, :coord2),
+      Keyword.get(args, :coord),
+      Keyword.get(args, :radius),
       Keyword.get(args, :resolution),
+      Keyword.get(args, :style),
       Keyword.get(args, :token)
     )
   end

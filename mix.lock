@@ -1,6 +1,7 @@
 %{
   "math": {:hex, :math, "0.7.0", "12af548c3892abf939a2e242216c3e7cbfb65b9b2fe0d872d05c6fb609f8127b", [:mix], [], "hexpm", "7987af97a0c6b58ad9db43eb5252a49fc1dfe1f6d98f17da9282e297f594ebc2"},
   "mox": {:hex, :mox, "1.0.1", "b651bf0113265cda0ba3a827fcb691f848b683c373b77e7d7439910a8d754d6e", [:mix], [], "hexpm", "35bc0dea5499d18db4ef7fe4360067a59b06c74376eb6ab3bd67e6295b133469"},
+  "sleeplocks": {:hex, :sleeplocks, "1.1.1", "3d462a0639a6ef36cc75d6038b7393ae537ab394641beb59830a1b8271faeed3", [:rebar3], [], "hexpm", "84ee37aeff4d0d92b290fff986d6a95ac5eedf9b383fadfd1d88e9b84a1c02e1"},
   "temp": {:hex, :temp, "0.4.7", "2c78482cc2294020a4bc0c95950b907ff386523367d4e63308a252feffbea9f2", [:mix], [], "hexpm", "6af19e7d6a85a427478be1021574d1ae2a1e1b90882586f06bde76c63cd03e0d"},
   "vincenty": {:hex, :vincenty, "1.0.0", "b3aae56be8c005ca271a87d2ec3960b96eeecc214165b858a94449f04f2658f7", [:rebar3], [], "hexpm", "a23fef32b5f26b30cfc2e99e0431f856ef46546757201f99d7b8af4c2789ebd7"},
   "yamerl": {:hex, :yamerl, "0.8.1", "07da13ffa1d8e13948943789665c62ccd679dfa7b324a4a2ed3149df17f453a4", [:rebar3], [], "hexpm", "96cb30f9d64344fed0ef8a92e9f16f207de6c04dfff4f366752ca79f5bceb23f"},

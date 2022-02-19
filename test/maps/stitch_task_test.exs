@@ -23,7 +23,6 @@ defmodule Maps.StitchTaskTest do
     start_supervised({Task.Supervisor, name: Maps.TestStitcher})
 
     result = Maps.StitchTask.stitch(Maps.TestStitcher, "/tmp/foo", context.config)
-    IO.inspect(result)
     assert false
   end
 end

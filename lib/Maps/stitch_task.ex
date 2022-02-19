@@ -1,63 +1,36 @@
 defmodule Maps.StitchTask do
   def stitch(supervisor, basedir, config) do
-    tile_info = collect_tile_info(basedir, config)
+    {{x1, y1}, {x2, y2}, _zoom} = Maps.Tile.tile_info(config.coord, config.radius, config.output_resolution)
 
     Task.await_many(
-      create_stitch_row_task(supervisor, tile_info.row_tiles, basedir)
+      create_stitch_row_task(supervisor, x1..x2, y1..y2, basedir),
+      120_000
     )
 
-    create_stitch_final_task(supervisor, tile_info.columns, basedir)
+    create_stitch_final_task(supervisor, y1..y2, basedir)
   end
 
-  defp collect_tile_info(basedir, config) do
-    collect_info = fn x, y, _x_res, _y_res, _coord1, _coord2, context ->
-      %{context |
-        rows: max(context.rows, y + 1),
-        columns: max(context.columns, x + 1),
-        row_tiles: Map.put(context.row_tiles,
-          y,
-          Enum.sort(
-            Map.get(context.row_tiles, y, []) ++ [Maps.IO.local_tile_path(basedir, x, y)]
-          )
-        )
-      }
-    end
-
-    Maps.Tile.foreach(
-      config.output_resolution,
-      config.coord1,
-      config.coord2,
-      collect_info,
-      %{
-        rows: 0,
-        columns: 0,
-        row_tiles: %{}
-      }
-    )
-  end
-
-  defp create_stitch_row_task(supervisor, row_tiles, basedir) do
-    Enum.map(row_tiles, fn {row, files} ->
+  defp create_stitch_row_task(supervisor, x_range, y_range, basedir) do
+    Enum.map(y_range, fn y ->
       Task.Supervisor.async(supervisor, fn ->
-        run_stitch_row_task(row, files, basedir)
+        run_stitch_row_task(y, x_range, basedir)
       end)
     end)
   end
 
-  defp run_stitch_row_task(row, files, basedir) do
-    [cmd | args] = Maps.IO.stitch_row_command(row, Enum.sort(files), basedir)
+  defp run_stitch_row_task(y, x_range, basedir) do
+    [cmd | args] = Maps.IO.stitch_row_command(y, x_range, basedir)
     System.cmd(cmd, args)
   end
 
-  defp create_stitch_final_task(supervisor, columns, basedir) do
+  defp create_stitch_final_task(supervisor, y_range, basedir) do
     Task.Supervisor.async(supervisor, fn ->
-      run_stitch_final_task(columns, basedir)
+      run_stitch_final_task(y_range, basedir)
     end)
   end
 
-  defp run_stitch_final_task(rows, basedir) do
-    row_files = for row <- 0..(rows - 1), do: Maps.IO.local_row_path(basedir, row)
-    [cmd | args] = Maps.IO.stitch_final_command(Enum.reverse(row_files), basedir)
+  defp run_stitch_final_task(y_range, basedir) do
+    [cmd | args] = Maps.IO.stitch_final_command(y_range, basedir)
     System.cmd(cmd, args)
   end
 
